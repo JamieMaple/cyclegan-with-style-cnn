@@ -1,0 +1,11 @@
+.idea
+__pycache__
+arch/__pycache__
+result
+checkpoints
+.DS_Store
+datasets/fonts/ltrainA
+datasets/fonts/ltrainB
+datasets/fonts/ltestA
+datasets/fonts/ltestB
+
