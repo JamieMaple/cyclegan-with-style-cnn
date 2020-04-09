@@ -126,14 +126,14 @@ class cycleGAN(object):
                 a_recon = self.Gab(b_fake)
                 b_recon = self.Gba(a_fake)
 
-                # a_idt = self.Gab(a_real)
-                # b_idt = self.Gba(b_real)
-
                 # Identity losses
                 ###################################################
-                # a_idt_loss = self.L1(a_idt, a_real) * args.lamda * args.idt_coef
-                # b_idt_loss = self.L1(b_idt, b_real) * args.lamda * args.idt_coef
+                a_idt = self.Gab(a_real)
+                b_idt = self.Gba(b_real)
 
+                lamda = 1.75E+12
+                a_idt_loss = self.L1(a_idt, a_real) * lamda
+                b_idt_loss = self.L1(b_idt, b_real) * lamda
 
                 a_real_features = vgg.get_features(a_real)
                 b_real_features = vgg.get_features(b_real)
@@ -170,7 +170,11 @@ class cycleGAN(object):
                 a_cycle_loss = self.L1(a_recon, a_real) * lamda
                 b_cycle_loss = self.L1(b_recon, b_real) * lamda
 
-                gen_loss = a_gen_loss + b_gen_loss + a_cycle_loss + b_cycle_loss + a_style_loss + b_style_loss + a_content_loss + b_content_loss
+                gen_loss = a_gen_loss + b_gen_loss +\
+                           a_cycle_loss + b_cycle_loss +\
+                           a_style_loss + b_style_loss +\
+                           a_content_loss + b_content_loss +\
+                           a_idt_loss + b_idt_loss
 
                 gen_loss.backward()
                 self.g_optimizer.step()
@@ -225,9 +229,6 @@ class cycleGAN(object):
                 print("Epoch: (%3d) (%5d/%5d) | Gen Loss:%.2e | Dis Loss:%.2e" %
                                             (epoch, i + 1, max(len(a_loader), len(b_loader)),
                                                             gen_loss, a_dis_loss+b_dis_loss))
-                # print("Epoch: (%3d) (%5d/%5d) | Total Loss:%.2e | Dis Loss:%.2e" %
-                #       (epoch, i + 1, min(len(a_loader), len(b_loader)),
-                #        total_loss))
 
             # Override the latest checkpoint
             #######################################################
