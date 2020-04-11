@@ -11,7 +11,6 @@ import utils
 from arch import define_Gen, define_Dis, set_grad
 from torch.optim import lr_scheduler
 import torchvision
-import vgg
 
 print_msg = 500
 '''
