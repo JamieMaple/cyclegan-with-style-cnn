@@ -13,6 +13,7 @@ from torch.optim import lr_scheduler
 import torchvision
 import vgg
 
+print_msg = 500
 '''
 Class for CycleGAN with train() as a member function
 
@@ -63,8 +64,6 @@ class cycleGAN(object):
             print(' [*] No checkpoint!')
             self.start_epoch = 0
 
-
-
     def train(self,args):
         # For transforming the input image
         transform = transforms.Compose(
@@ -87,8 +86,8 @@ class cycleGAN(object):
 
         max_len = max(len(a_loader), len(b_loader))
 
+        steps = 0
         for epoch in range(self.start_epoch, args.epochs):
-
             lr = self.g_optimizer.param_groups[0]['lr']
             print('learning rate = %.7f' % lr)
 
@@ -131,7 +130,8 @@ class cycleGAN(object):
                 a_idt = self.Gab(a_real)
                 b_idt = self.Gba(b_real)
 
-                lamda = 1.75E+12
+                # lamda = 1.75E+12
+                lamda = args.lamda * args.idt_coef
                 a_idt_loss = self.L1(a_idt, a_real) * lamda
                 b_idt_loss = self.L1(b_idt, b_real) * lamda
 
@@ -141,15 +141,17 @@ class cycleGAN(object):
                 b_fake_features = vgg.get_features(b_fake)
 
                 # Content losses
-                content_loss_weight = 1.50
-                a_content_loss = vgg.get_content_loss(b_fake_features, a_real_features) * content_loss_weight
-                b_content_loss = vgg.get_content_loss(a_fake_features, b_real_features) * content_loss_weight
+                # content_loss_weight = 1.50
+                # content_loss_weight = 1
+                # a_content_loss = vgg.get_content_loss(b_fake_features, a_real_features) * content_loss_weight
+                # b_content_loss = vgg.get_content_loss(a_fake_features, b_real_features) * content_loss_weight
 
                 # style losse
-                style_loss_weight = 3.00E+05
+                # style_loss_weight = 3.00E+05
+                # style_loss_weight = 1
 
-                a_style_loss = vgg.get_style_loss(a_fake_features, a_real_features) * style_loss_weight
-                b_style_loss = vgg.get_style_loss(b_fake_features, b_real_features) * style_loss_weight
+                # a_style_loss = vgg.get_style_loss(a_fake_features, a_real_features) * style_loss_weight
+                # b_style_loss = vgg.get_style_loss(b_fake_features, b_real_features) * style_loss_weight
 
                 # Adversarial losses
                 ###################################################
@@ -158,34 +160,32 @@ class cycleGAN(object):
 
                 real_label = utils.cuda(Variable(torch.ones(a_fake_dis.size())))
 
-                gen_loss_weight = 4.50E+08
+                # gen_loss_weight = 4.50E+08
+                gen_loss_weight = 1
                 a_gen_loss = self.MSE(a_fake_dis, real_label) * gen_loss_weight
                 b_gen_loss = self.MSE(b_fake_dis, real_label) * gen_loss_weight
 
                 # Cycle consistency losses
                 ###################################################
-                # a_cycle_loss = self.L1(a_recon, a_real) * args.lamda
-                # b_cycle_loss = self.L1(b_recon, b_real) * args.lamda
-                lamda = 3.50E+12
-                a_cycle_loss = self.L1(a_recon, a_real) * lamda
-                b_cycle_loss = self.L1(b_recon, b_real) * lamda
+                a_cycle_loss = self.L1(a_recon, a_real) * args.lamda
+                b_cycle_loss = self.L1(b_recon, b_real) * args.lamda
+                # lamda = 3.50E+12
+                # a_cycle_loss = self.L1(a_recon, a_real) * lamda
+                # b_cycle_loss = self.L1(b_recon, b_real) * lamda
 
-                gen_loss = a_gen_loss + b_gen_loss +\
-                           a_cycle_loss + b_cycle_loss +\
-                           a_style_loss + b_style_loss +\
-                           a_content_loss + b_content_loss +\
-                           a_idt_loss + b_idt_loss
-
-                gen_loss.backward()
-                self.g_optimizer.step()
+                # gen_loss = a_gen_loss + b_gen_loss +\
+                #            a_cycle_loss + b_cycle_loss +\
+                #            a_style_loss + b_style_loss +\
+                #            a_content_loss + b_content_loss +\
+                #            a_idt_loss + b_idt_loss
 
                 # # Total generators losses
                 # ###################################################
-                # gen_loss = a_gen_loss + b_gen_loss + a_cycle_loss + b_cycle_loss + a_idt_loss + b_idt_loss
+                gen_loss = a_gen_loss + b_gen_loss + a_cycle_loss + b_cycle_loss + a_idt_loss + b_idt_loss
                 # # Update generators
                 # ###################################################
-                # gen_loss.backward()
-                # self.g_optimizer.step()
+                gen_loss.backward()
+                self.g_optimizer.step()
                 #
                 #
                 # Discriminator Computations
@@ -226,9 +226,11 @@ class cycleGAN(object):
                 b_dis_loss.backward()
                 self.d_optimizer.step()
 
-                print("Epoch: (%3d) (%5d/%5d) | Gen Loss:%.2e | Dis Loss:%.2e" %
-                                            (epoch, i + 1, max(len(a_loader), len(b_loader)),
-                                                            gen_loss, a_dis_loss+b_dis_loss))
+                steps += 1
+                if steps % print_msg == 0:
+                    print("Epoch: (%3d) (%5d/%5d) | Gen Loss:%.2e | Dis Loss:%.2e" %
+                                                (epoch, i + 1, max(len(a_loader), len(b_loader)),
+                                                                gen_loss, a_dis_loss+b_dis_loss))
 
             # Override the latest checkpoint
             #######################################################

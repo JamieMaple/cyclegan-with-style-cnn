@@ -53,3 +53,15 @@ def gram_matrix(output):
 
     return gram.div(batch_size * d * h * w)
 
+
+from torchviz import make_dot, make_dot_from_trace
+from torch.autograd import Variable
+
+def draw_vgg():
+    x = Variable(torch.randn(1, 3, 256, 256))
+    y = vgg(x)
+    make_dot(y, params=dict(vgg.named_parameters()))
+
+if __name__ == '__main__':
+    draw_vgg()
+
