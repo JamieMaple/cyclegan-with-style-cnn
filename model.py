@@ -134,10 +134,10 @@ class cycleGAN(object):
                 a_idt_loss = self.L1(a_idt, a_real) * lamda
                 b_idt_loss = self.L1(b_idt, b_real) * lamda
 
-                a_real_features = vgg.get_features(a_real)
-                b_real_features = vgg.get_features(b_real)
-                a_fake_features = vgg.get_features(a_fake)
-                b_fake_features = vgg.get_features(b_fake)
+                # a_real_features = vgg.get_features(a_real)
+                # b_real_features = vgg.get_features(b_real)
+                # a_fake_features = vgg.get_features(a_fake)
+                # b_fake_features = vgg.get_features(b_fake)
 
                 # Content losses
                 # content_loss_weight = 1.50
