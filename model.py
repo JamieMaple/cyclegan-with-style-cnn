@@ -94,8 +94,6 @@ class cycleGAN(object):
             b_it = iter(b_loader)
 
             for i in range(max_len):
-                # step
-                # step = epoch * min(len(a_loader), len(b_loader)) + i + 1
                 try:
                     a_real = next(a_it)[0]
                 except:
@@ -246,6 +244,30 @@ class cycleGAN(object):
             ########################
             self.g_lr_scheduler.step()
             self.d_lr_scheduler.step()
+
+if __name__ == '__main__':
+    from main import get_args
+    from torchviz import make_dot
+    from torch.autograd import Variable
+    from arch.generators import ResnetGenerator
+    inputs = torch.randn(1, 3, 256, 256)
+
+    # Da = cycleGAN(get_args()).Gab
+    # y = Da(Variable(inputs))
+
+    Gab = cycleGAN(get_args()).Gab
+    y = Gab(Variable(inputs))
+    print(Gab)
+    pass
+
+    # dot = make_dot(y, params=dict(Da.named_parameters()))
+    # dot.save('d', 'images')
+
+    # dot = make_dot(y, params=dict(Gab.named_parameters()))
+    # dot.save('g', 'images')
+
+    # dot.format = 'jpg'
+    # dot.render('g', )
 
 
 

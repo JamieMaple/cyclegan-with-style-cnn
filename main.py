@@ -31,6 +31,17 @@ def get_args():
     parser.add_argument('--gen_net', type=str, default='resnet_9blocks')
     parser.add_argument('--dis_net', type=str, default='n_layers')
     args = parser.parse_args()
+
+    str_ids = args.gpu_ids.split(',')
+    args.gpu_ids = []
+
+    for str_id in str_ids:
+        id = int(str_id)
+        if id >= 0:
+            args.gpu_ids.append(id)
+
+    print(not args.no_dropout)
+
     return args
 
 
@@ -39,13 +50,7 @@ def main():
 
   create_link(args.dataset_dir)
 
-  str_ids = args.gpu_ids.split(',')
-  args.gpu_ids = []
-  for str_id in str_ids:
-    id = int(str_id)
-    if id >= 0:
-      args.gpu_ids.append(id)
-  print(not args.no_dropout)
+
   if args.training:
       print("Training")
       model = md.cycleGAN(args)

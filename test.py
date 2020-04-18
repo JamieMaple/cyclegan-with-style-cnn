@@ -8,10 +8,6 @@ import torchvision.transforms as transforms
 import utils
 from arch import define_Gen, define_Dis
 
-
-
-
-
 def test(args):
 
     transform = transforms.Compose(
@@ -58,24 +54,39 @@ def test(args):
 
 
     """ run """
-    a_real_test = Variable(iter(a_test_loader).next()[0], requires_grad=True)
-    b_real_test = Variable(iter(b_test_loader).next()[0], requires_grad=True)
-    a_real_test, b_real_test = utils.cuda([a_real_test, b_real_test])
-            
+    a_it = iter(a_test_loader)
+    b_it = iter(b_test_loader)
+    for i in range(len(a_test_loader)):
+        try:
+            a_real_test = Variable(next(a_it)[0], requires_grad=True)
+        except:
+            a_it = iter(a_test_loader)
 
-    Gab.eval()
-    Gba.eval()
+        try:
+            b_real_test = Variable(next(b_it)[0], requires_grad=True)
+        except:
+            b_it = iter(b_test_loader)
 
-    with torch.no_grad():
-        a_fake_test = Gab(b_real_test)
-        b_fake_test = Gba(a_real_test)
-        a_recon_test = Gab(b_fake_test)
-        b_recon_test = Gba(a_fake_test)
+        print(a_real_test)
+        return
 
-    pic = (torch.cat([a_real_test, b_fake_test, a_recon_test, b_real_test, a_fake_test, b_recon_test], dim=0).data + 1) / 2.0
+        a_real_test, b_real_test = utils.cuda([a_real_test, b_real_test])
+        print(a_real_test.shape)
 
-    if not os.path.isdir(args.results_dir):
-        os.makedirs(args.results_dir)
+        Gab.eval()
+        Gba.eval()
 
-    torchvision.utils.save_image(pic, args.results_dir+'/sample.jpg', nrow=3)
+        with torch.no_grad():
+            a_fake_test = Gab(b_real_test)
+            b_fake_test = Gba(a_real_test)
+            a_recon_test = Gab(b_fake_test)
+            b_recon_test = Gba(a_fake_test)
+
+        pic = (torch.cat([a_real_test, b_fake_test, a_recon_test, b_real_test, a_fake_test, b_recon_test], dim=0).data + 1) / 2.0
+
+        if not os.path.isdir(args.results_dir):
+            os.makedirs(args.results_dir)
+
+        path = str.format("{}/sample-{}.jpg", args.results_dir, i)
+        torchvision.utils.save_image(pic, path, nrow=3)
 

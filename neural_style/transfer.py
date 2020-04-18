@@ -12,10 +12,9 @@ from torchvision import datasets
 from torchvision import transforms
 import torch.onnx
 
-import utils
+import util as utils
 from transformer_net import TransformerNet
 from vgg import Vgg16
-
 
 def check_paths(args):
     try:
@@ -111,8 +110,9 @@ def train(args):
 
     # save model
     transformer.eval().cpu()
-    save_model_filename = "epoch_" + str(args.epochs) + "_" + str(time.ctime()).replace(' ', '_') + "_" + str(
-        args.content_weight) + "_" + str(args.style_weight) + ".model"
+    # save_model_filename = "epoch_" + str(args.epochs) + "_" + str(time.ctime()).replace(' ', '_') + "_" + str(
+    #     args.content_weight) + "_" + str(args.style_weight) + ".model"
+    save_model_filename = "ckpt.epoch_" + str(args.epochs) + ".ckpt"
     save_model_path = os.path.join(args.save_model_dir, save_model_filename)
     torch.save(transformer.state_dict(), save_model_path)
 
@@ -123,50 +123,25 @@ def stylize(args):
     device = torch.device("cuda" if args.cuda else "cpu")
 
     content_image = utils.load_image(args.content_image, scale=args.content_scale)
+    content_image = content_image.convert('RGB')
     content_transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Lambda(lambda x: x.mul(255))
+        transforms.Lambda(lambda x: x.mul(255)),
     ])
     content_image = content_transform(content_image)
     content_image = content_image.unsqueeze(0).to(device)
 
-    if args.model.endswith(".onnx"):
-        output = stylize_onnx_caffe2(content_image, args)
-    else:
-        with torch.no_grad():
-            style_model = TransformerNet()
-            state_dict = torch.load(args.model)
-            # remove saved deprecated running_* keys in InstanceNorm from the checkpoint
-            for k in list(state_dict.keys()):
-                if re.search(r'in\d+\.running_(mean|var)$', k):
-                    del state_dict[k]
-            style_model.load_state_dict(state_dict)
-            style_model.to(device)
-            if args.export_onnx:
-                assert args.export_onnx.endswith(".onnx"), "Export model file should end with .onnx"
-                output = torch.onnx._export(style_model, content_image, args.export_onnx).cpu()
-            else:
-                output = style_model(content_image).cpu()
+    with torch.no_grad():
+        style_model = TransformerNet()
+        state_dict = torch.load(args.model)
+        # remove saved deprecated running_* keys in InstanceNorm from the checkpoint
+        for k in list(state_dict.keys()):
+            if re.search(r'in\d+\.running_(mean|var)$', k):
+                del state_dict[k]
+        style_model.load_state_dict(state_dict)
+        style_model.to(device)
+        output = style_model(content_image).cpu()
     utils.save_image(args.output_image, output[0])
-
-
-def stylize_onnx_caffe2(content_image, args):
-    """
-    Read ONNX model and run it using Caffe2
-    """
-
-    assert not args.export_onnx
-
-    import onnx
-    import onnx_caffe2.backend
-
-    model = onnx.load(args.model)
-
-    prepared_backend = onnx_caffe2.backend.prepare(model, device='CUDA' if args.cuda else 'CPU')
-    inp = {model.graph.input[0].name: content_image.numpy()}
-    c2_out = prepared_backend.run(inp)[0]
-
-    return torch.from_numpy(c2_out)
 
 
 def main():
@@ -213,12 +188,10 @@ def main():
                                  help="factor for scaling down the content image")
     eval_arg_parser.add_argument("--output-image", type=str, required=True,
                                  help="path for saving the output image")
-    eval_arg_parser.add_argument("--model", type=str, required=True,
-                                 help="saved model to be used for stylizing the image. If file ends in .pth - PyTorch path is used, if in .onnx - Caffe2 path")
     eval_arg_parser.add_argument("--cuda", type=int, required=True,
                                  help="set it to 1 for running on GPU, 0 for CPU")
-    eval_arg_parser.add_argument("--export_onnx", type=str,
-                                 help="export ONNX model to a given file")
+    eval_arg_parser.add_argument("--model", type=str, required=True,
+                                 help="saved model to be used for stylizing the image. If file ends in .pth - PyTorch path is used.")
 
     args = main_arg_parser.parse_args()
 
@@ -238,3 +211,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    # print("hello")
