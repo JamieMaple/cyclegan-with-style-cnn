@@ -1,0 +1,69 @@
+digraph {
+	graph [size="12,12"]
+	node [align=left fontsize=12 height=0.2 ranksep=0.1 shape=box style=filled]
+	4906306768 [label=MkldnnConvolutionBackward fillcolor=darkolivegreen1]
+	4906306640 -> 4906306768
+	4906306640 [label=AsStridedBackward]
+	4906306192 -> 4906306640
+	4906306192 [label=CopySlices]
+	4906306512 -> 4906306192
+	4906306512 [label=NativeBatchNormBackward]
+	4906306448 -> 4906306512
+	4906306448 [label=ViewBackward]
+	4906306064 -> 4906306448
+	4906306064 [label=MkldnnConvolutionBackward]
+	4906306000 -> 4906306064
+	4906306000 [label=AsStridedBackward]
+	4906305872 -> 4906306000
+	4906305872 [label=CopySlices]
+	4906305360 -> 4906305872
+	4906305360 [label=NativeBatchNormBackward]
+	4906304784 -> 4906305360
+	4906304784 [label=ViewBackward]
+	4906305680 -> 4906304784
+	4906305680 [label=MkldnnConvolutionBackward]
+	4906304720 -> 4906305680
+	4906304720 [label=AsStridedBackward]
+	4906304464 -> 4906304720
+	4906304464 [label=CopySlices]
+	4906305232 -> 4906304464
+	4906305232 [label=NativeBatchNormBackward]
+	4906305168 -> 4906305232
+	4906305168 [label=ViewBackward]
+	4906305104 -> 4906305168
+	4906305104 [label=MkldnnConvolutionBackward]
+	4906303952 -> 4906305104
+	4906303952 [label=LeakyReluBackward1]
+	4906304272 -> 4906303952
+	4906304272 [label=MkldnnConvolutionBackward]
+	4906303824 -> 4906304272
+	4906303824 [label="dis_model.0.weight
+ (64, 3, 4, 4)" fillcolor=lightblue]
+	4906304144 -> 4906304272
+	4906304144 [label="dis_model.0.bias
+ (64)" fillcolor=lightblue]
+	4906304336 -> 4906305104
+	4906304336 [label="dis_model.2.0.weight
+ (128, 64, 4, 4)" fillcolor=lightblue]
+	4906303760 -> 4906305104
+	4906303760 [label="dis_model.2.0.bias
+ (128)" fillcolor=lightblue]
+	4906304528 -> 4906305680
+	4906304528 [label="dis_model.3.0.weight
+ (256, 128, 4, 4)" fillcolor=lightblue]
+	4906304656 -> 4906305680
+	4906304656 [label="dis_model.3.0.bias
+ (256)" fillcolor=lightblue]
+	4906306384 -> 4906306064
+	4906306384 [label="dis_model.4.0.weight
+ (512, 256, 4, 4)" fillcolor=lightblue]
+	4906305552 -> 4906306064
+	4906305552 [label="dis_model.4.0.bias
+ (512)" fillcolor=lightblue]
+	4906306576 -> 4906306768
+	4906306576 [label="dis_model.5.weight
+ (1, 512, 4, 4)" fillcolor=lightblue]
+	4906306704 -> 4906306768
+	4906306704 [label="dis_model.5.bias
+ (1)" fillcolor=lightblue]
+}
